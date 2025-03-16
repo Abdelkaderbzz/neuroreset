@@ -12,7 +12,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 export const supabase = createClient(supabaseUrl || "", supabaseAnonKey || "")
-
 // Helper function to check if Supabase is configured properly
 export async function checkSupabaseConnection() {
   try {
