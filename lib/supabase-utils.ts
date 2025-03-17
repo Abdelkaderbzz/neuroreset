@@ -1,7 +1,7 @@
 import { supabase } from "./supabase"
 
 // Error handling wrapper
-async function handleSupabaseOperation(operation: () => Promise<any>, errorMessage: string) {
+export async function handleSupabaseOperation(operation: () => Promise<any>, errorMessage: string) {
   try {
     return await operation()
   } catch (error) {
