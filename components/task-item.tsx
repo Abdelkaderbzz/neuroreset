@@ -18,13 +18,15 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Clock, Edit, MoreHorizontal, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { EPriority } from "@/api"
 
 interface TaskItemProps {
   id: string
   title: string
   description: string
   time: string
-  priority?: "low" | "medium" | "high"
+  priority?: EPriority
+  completed?:boolean
   onComplete: (id: string, completed: boolean) => void
   onEdit?: (id: string) => void
   onDelete?: (id: string) => void
@@ -35,16 +37,17 @@ export function TaskItem({
   title,
   description,
   time,
-  priority = "medium",
+  priority = EPriority.Medium,
+  completed = false,
   onComplete,
   onEdit,
   onDelete,
 }: TaskItemProps) {
-  const [completed, setCompleted] = useState(false)
+  const [taskCompleted, setTaskCompleted] = useState(completed)
   const [isDeleting, setIsDeleting] = useState(false)
 
   const handleCheckboxChange = (checked: boolean) => {
-    setCompleted(checked)
+    setTaskCompleted(checked)
     onComplete(id, checked)
   }
 
@@ -59,11 +62,11 @@ export function TaskItem({
 
   const getPriorityColor = () => {
     switch (priority) {
-      case "high":
+      case EPriority.High:
         return "text-red-600 dark:text-red-400"
-      case "medium":
+      case EPriority.Medium:
         return "text-amber-600 dark:text-amber-400"
-      case "low":
+      case EPriority.Low:
         return "text-green-600 dark:text-green-400"
       default:
         return "text-muted-foreground"
@@ -74,21 +77,21 @@ export function TaskItem({
     <div
       className={cn(
         "flex items-start gap-4 p-4 rounded-lg border transition-colors",
-        completed ? "bg-muted/30" : "",
+        taskCompleted ? "bg-muted/30" : "",
         "hover:border-primary/50",
       )}
     >
-      <Checkbox id={id} checked={completed} onCheckedChange={handleCheckboxChange} className="mt-1" />
+      <Checkbox id={id} checked={taskCompleted} onCheckedChange={handleCheckboxChange} className="mt-1" />
       <div className="flex-1">
         <div className="flex items-start justify-between">
           <div>
             <label
               htmlFor={id}
-              className={cn("font-medium cursor-pointer", completed ? "line-through text-muted-foreground" : "")}
+              className={cn("font-medium cursor-pointer", taskCompleted ? "line-through text-muted-foreground" : "")}
             >
               {title}
             </label>
-            <p className={cn("text-sm", completed ? "text-muted-foreground/70" : "text-muted-foreground")}>
+            <p className={cn("text-sm", taskCompleted ? "text-muted-foreground/70" : "text-muted-foreground")}>
               {description}
             </p>
           </div>
@@ -142,17 +145,17 @@ export function TaskItem({
               variant="outline"
               className={cn(
                 "text-xs",
-                priority === "high"
+                priority === EPriority.High
                   ? "border-red-200 bg-red-100 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300"
-                  : priority === "medium"
+                  : priority === EPriority.Medium
                     ? "border-amber-200 bg-amber-100 text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-300"
                     : "border-green-200 bg-green-100 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300",
               )}
             >
-              {priority.charAt(0).toUpperCase() + priority.slice(1)} Priority
+              {priority.charAt(0).toUpperCase() + priority.slice(1)}
             </Badge>
           )}
-          {completed && (
+          {taskCompleted && (
             <Badge variant="outline" className="bg-green-600 text-white dark:bg-green-700">
               Completed
             </Badge>
