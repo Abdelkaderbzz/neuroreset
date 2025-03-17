@@ -57,7 +57,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "Recovery Plan", href: "/recovery-plan", icon: <BarChart3 className="h-5 w-5" /> },
     { name: "Community", href: "/community", icon: <Users className="h-5 w-5" /> },
     { name: "Messages", href: "/messages", icon: <MessageSquare className="h-5 w-5" /> },
-    { name: "Appointments", href: "/appointments", icon: <Calendar className="h-5 w-5" /> },
     { name: "Resources", href: "/resources", icon: <LifeBuoy className="h-5 w-5" /> },
     { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" /> },
     { name: "Settings", href: "/settings", icon: <Settings className="h-5 w-5" /> },
