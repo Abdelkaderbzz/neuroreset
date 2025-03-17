@@ -19,12 +19,13 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import { createTask, EPriority } from "@/api"
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
-  time: z.string().min(1, "Time is required"),
-  priority: z.enum(["low", "medium", "high"]).default("medium"),
+  time: z.string(),
+  priority: z.enum([EPriority.Low, EPriority.Medium, EPriority.High]).default(EPriority.Medium),
 })
 
 type TaskFormValues = z.infer<typeof taskSchema>
@@ -36,14 +37,13 @@ interface AddTaskDialogProps {
     title: string
     description: string
     time: string
-    priority?: "low" | "medium" | "high"
+    priority?: EPriority
   }
   onEditComplete?: () => void
 }
 
 export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDialogProps) {
   const [open, setOpen] = useState(false)
-
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: editTask
@@ -51,23 +51,25 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
           title: editTask.title,
           description: editTask.description,
           time: editTask.time,
-          priority: editTask.priority || "medium",
+          priority: editTask.priority || EPriority.Medium,
         }
       : {
           title: "",
           description: "",
-          time: "",
-          priority: "medium",
+          time: '',
+          priority: EPriority.Medium,
         },
   })
 
-  function onSubmit(values: TaskFormValues) {
-    onAddTask(values)
+  async function onSubmit(values: TaskFormValues) {
+    
+    const newTask = await createTask(values)
+    if(newTask && newTask.length > 0) onAddTask(newTask[0])
     form.reset({
       title: "",
       description: "",
-      time: "",
-      priority: "medium",
+      time: '',
+      priority: EPriority.Medium,
     })
     setOpen(false)
     if (editTask && onEditComplete) {
@@ -154,9 +156,9 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
-                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value={EPriority.Low}>Low</SelectItem>
+                        <SelectItem value={EPriority.Medium}>Medium</SelectItem>
+                        <SelectItem value={EPriority.High}>High</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

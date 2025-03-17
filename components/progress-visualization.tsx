@@ -20,24 +20,9 @@ import {
 } from "recharts"
 import { Info, TrendingUp } from "lucide-react"
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { useMonthlyTaskData, useWeeklyTaskData } from "@/hooks/tasks"
 
-// Sample data for the charts
-const weeklyData = [
-  { day: "Mon", completed: 4, total: 5 },
-  { day: "Tue", completed: 5, total: 5 },
-  { day: "Wed", completed: 3, total: 5 },
-  { day: "Thu", completed: 4, total: 5 },
-  { day: "Fri", completed: 5, total: 5 },
-  { day: "Sat", completed: 2, total: 5 },
-  { day: "Sun", completed: 3, total: 5 },
-]
 
-const monthlyData = [
-  { week: "Week 1", completion: 75 },
-  { week: "Week 2", completion: 82 },
-  { week: "Week 3", completion: 68 },
-  { week: "Week 4", completion: 90 },
-]
 
 const categoryData = [
   { name: "Meditation", value: 28 },
@@ -87,7 +72,8 @@ export function ProgressVisualization() {
     }
     return null
   }
-
+  const weeklyData = useWeeklyTaskData();
+  const monthlyData = useMonthlyTaskData();
   return (
     <Card>
       <CardHeader>
