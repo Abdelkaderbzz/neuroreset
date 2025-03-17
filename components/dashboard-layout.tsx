@@ -57,7 +57,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     { name: "Recovery Plan", href: "/recovery-plan", icon: <BarChart3 className="h-5 w-5" /> },
     { name: "Community", href: "/community", icon: <Users className="h-5 w-5" /> },
     { name: "Messages", href: "/messages", icon: <MessageSquare className="h-5 w-5" /> },
-    { name: "Appointments", href: "/appointments", icon: <Calendar className="h-5 w-5" /> },
     { name: "Resources", href: "/resources", icon: <LifeBuoy className="h-5 w-5" /> },
     { name: "Profile", href: "/profile", icon: <User className="h-5 w-5" /> },
     { name: "Settings", href: "/settings", icon: <Settings className="h-5 w-5" /> },
@@ -167,15 +166,6 @@ function DesktopSidebar({
           ))}
         </nav>
       </div>
-
-      <div className="border-t p-4">
-        <div className="flex items-center justify-center">
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => toggleSidebar()}>
-            <Menu className="h-4 w-4 mr-2" />
-            <span>Toggle sidebar</span>
-          </Button>
-        </div>
-      </div>
     </>
   )
 }
@@ -213,14 +203,6 @@ function MobileSidebar({ pathname, navigationItems }: { pathname: string; naviga
         </nav>
       </div>
 
-      <div className="border-t p-4">
-        <div className="flex items-center justify-center">
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => router.back()}>
-            <Menu className="h-4 w-4 mr-2" />
-            <span>Close sidebar</span>
-          </Button>
-        </div>
-      </div>
     </div>
   )
 }

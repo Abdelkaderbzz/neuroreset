@@ -7,7 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
-import { Bell, PenSquare, Plus, Search, Filter, Calendar } from 'lucide-react';
+import { Bell, PenSquare, Search, Calendar, Plus } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import type {
   Post,
@@ -22,6 +29,8 @@ import { CommunitySidebar } from '@/components/community/community-sidebar';
 import { SupportGroupCard } from '@/components/community/support-group-card';
 import { EventCard } from '@/components/community/event-card';
 import { SuccessStoryCard } from '@/components/community/success-story-card';
+import { CreateGroupDialog } from '@/components/community/create-group-dialog';
+import { CreateStoryModal } from '@/components/community/create-story-modal';
 import { supabase } from '@/lib/supabase';
 
 export default function CommunityPage() {
@@ -36,8 +45,13 @@ export default function CommunityPage() {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [supportGroups, setSupportGroups] = useState<SupportGroup[]>([]);
+  const [filteredGroups, setFilteredGroups] = useState<SupportGroup[]>([]);
+  const [groupFilter, setGroupFilter] = useState('all'); // all, joined, not-joined
+  const [groupSearchQuery, setGroupSearchQuery] = useState('');
   const [events, setEvents] = useState<Event[]>([]);
   const [successStories, setSuccessStories] = useState<SuccessStory[]>([]);
+  const [filteredStories, setFilteredStories] = useState<SuccessStory[]>([]);
+  const [storySearchQuery, setStorySearchQuery] = useState('');
   const [activeMembers, setActiveMembers] = useState<User[]>([]);
   const [communityStats, setCommunityStats] = useState({
     totalMembers: 0,
@@ -53,6 +67,9 @@ export default function CommunityPage() {
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Story-related state
+  const [isCreateStoryModalOpen, setIsCreateStoryModalOpen] = useState(false);
+
   // Fetch posts with authors and check if current user liked them
   const fetchPosts = async () => {
     try {
@@ -66,7 +83,7 @@ export default function CommunityPage() {
         `
         )
         .order('created_at', { ascending: false });
-      console.log(postsData, 'postdata');
+
       if (postsError) throw postsError;
 
       // Get likes for current user
@@ -130,6 +147,7 @@ export default function CommunityPage() {
       }));
 
       setSupportGroups(formattedGroups);
+      setFilteredGroups(formattedGroups);
     } catch (error) {
       console.error('Error fetching support groups:', error);
       toast({
@@ -171,13 +189,8 @@ export default function CommunityPage() {
 
       if (error) throw error;
 
-      // Format success stories with author
-      const formattedStories = data.map((story) => ({
-        ...story,
-        author: story.author as User,
-      }));
-
-      setSuccessStories(formattedStories);
+      setSuccessStories(data);
+      setFilteredStories(data);
     } catch (error) {
       console.error('Error fetching success stories:', error);
       toast({
@@ -298,6 +311,51 @@ export default function CommunityPage() {
     }
   }, [searchQuery, posts]);
 
+  // Filter groups based on filter and search query
+  useEffect(() => {
+    let filtered = [...supportGroups];
+
+    // Apply membership filter
+    if (groupFilter === 'joined') {
+      filtered = filtered.filter((group) => group.joined);
+    } else if (groupFilter === 'not-joined') {
+      filtered = filtered.filter((group) => !group.joined);
+    }
+
+    // Apply search filter
+    if (groupSearchQuery) {
+      filtered = filtered.filter(
+        (group) =>
+          group.name.toLowerCase().includes(groupSearchQuery.toLowerCase()) ||
+          (group.description &&
+            group.description
+              .toLowerCase()
+              .includes(groupSearchQuery.toLowerCase()))
+      );
+    }
+
+    setFilteredGroups(filtered);
+  }, [groupFilter, groupSearchQuery, supportGroups]);
+
+  // Filter stories based on search query
+  useEffect(() => {
+    if (storySearchQuery) {
+      setFilteredStories(
+        successStories.filter(
+          (story) =>
+            story.title
+              .toLowerCase()
+              .includes(storySearchQuery.toLowerCase()) ||
+            story.content
+              .toLowerCase()
+              .includes(storySearchQuery.toLowerCase())
+        )
+      );
+    } else {
+      setFilteredStories(successStories);
+    }
+  }, [storySearchQuery, successStories]);
+
   // Handle post update
   const handlePostUpdate = (updatedPost: Post) => {
     setPosts(
@@ -319,6 +377,11 @@ export default function CommunityPage() {
     );
   };
 
+  // Handle group creation
+  const handleGroupCreated = (newGroup: SupportGroup) => {
+    setSupportGroups([newGroup, ...supportGroups]);
+  };
+
   // Handle event update
   const handleEventUpdate = (updatedEvent: Event) => {
     setEvents((events) =>
@@ -326,6 +389,27 @@ export default function CommunityPage() {
         event.id === updatedEvent.id ? updatedEvent : event
       )
     );
+  };
+
+  // Handle story update
+  const handleStoryUpdate = (updatedStory: SuccessStory) => {
+    setSuccessStories(
+      successStories.map((story) =>
+        story.id === updatedStory.id ? updatedStory : story
+      )
+    );
+  };
+
+  // Handle story creation
+  const handleStoryCreated = (newStory: SuccessStory) => {
+    setSuccessStories([newStory, ...successStories]);
+    setFilteredStories([newStory, ...filteredStories]);
+
+    // Update community stats
+    setCommunityStats({
+      ...communityStats,
+      successStories: communityStats.successStories + 1,
+    });
   };
 
   return (
@@ -436,17 +520,35 @@ export default function CommunityPage() {
 
           {/* Groups Tab */}
           <TabsContent value='groups' className='space-y-6'>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
               <h2 className='text-xl font-semibold'>Support Groups</h2>
-              <div className='flex items-center gap-2'>
-                <Button variant='outline' size='sm'>
-                  <Filter className='h-4 w-4 mr-2' />
-                  Filter
-                </Button>
-                <Button size='sm'>
-                  <Plus className='h-4 w-4 mr-2' />
-                  Create Group
-                </Button>
+              <div className='flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto'>
+                <div className='flex items-center gap-2 w-full md:w-auto'>
+                  <div className='relative flex-1 md:w-[200px]'>
+                    <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                    <Input
+                      type='search'
+                      placeholder='Search groups...'
+                      className='pl-8'
+                      value={groupSearchQuery}
+                      onChange={(e) => setGroupSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Select value={groupFilter} onValueChange={setGroupFilter}>
+                    <SelectTrigger className='w-[130px]'>
+                      <SelectValue placeholder='Filter' />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value='all'>All Groups</SelectItem>
+                      <SelectItem value='joined'>My Groups</SelectItem>
+                      <SelectItem value='not-joined'>Not Joined</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <CreateGroupDialog
+                  currentUser={currentUser}
+                  onGroupCreated={handleGroupCreated}
+                />
               </div>
             </div>
 
@@ -465,9 +567,9 @@ export default function CommunityPage() {
                   </Card>
                 ))}
               </div>
-            ) : (
+            ) : filteredGroups.length > 0 ? (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {supportGroups.map((group) => (
+                {filteredGroups.map((group) => (
                   <SupportGroupCard
                     key={group.id}
                     group={group}
@@ -476,6 +578,27 @@ export default function CommunityPage() {
                   />
                 ))}
               </div>
+            ) : (
+              <Card>
+                <CardContent className='pt-6 text-center py-12'>
+                  <div className='flex flex-col items-center justify-center'>
+                    <Search className='h-12 w-12 text-muted-foreground mb-4' />
+                    <h3 className='text-lg font-medium mb-2'>
+                      No groups found
+                    </h3>
+                    <p className='text-muted-foreground mb-4'>
+                      {groupFilter === 'joined'
+                        ? "You haven't joined any groups yet."
+                        : "We couldn't find any groups matching your search."}
+                    </p>
+                    {groupSearchQuery && (
+                      <Button onClick={() => setGroupSearchQuery('')}>
+                        Clear Search
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
 
@@ -526,12 +649,24 @@ export default function CommunityPage() {
 
           {/* Success Stories Tab */}
           <TabsContent value='stories' className='space-y-6'>
-            <div className='flex items-center justify-between'>
+            <div className='flex flex-col md:flex-row items-start md:items-center justify-between gap-4'>
               <h2 className='text-xl font-semibold'>Success Stories</h2>
-              <Button>
-                <PenSquare className='h-4 w-4 mr-2' />
-                Share Your Story
-              </Button>
+              <div className='flex flex-col md:flex-row items-start md:items-center gap-4 w-full md:w-auto'>
+                <div className='relative flex-1 md:w-[200px]'>
+                  <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' />
+                  <Input
+                    type='search'
+                    placeholder='Search stories...'
+                    className='pl-8'
+                    value={storySearchQuery}
+                    onChange={(e) => setStorySearchQuery(e.target.value)}
+                  />
+                </div>
+                <Button onClick={() => setIsCreateStoryModalOpen(true)}>
+                  <PenSquare className='h-4 w-4 mr-2' />
+                  Share Your Story
+                </Button>
+              </div>
             </div>
 
             {isLoading ? (
@@ -555,16 +690,48 @@ export default function CommunityPage() {
                   </Card>
                 ))}
               </div>
-            ) : (
+            ) : filteredStories.length > 0 ? (
               <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-                {successStories.map((story) => (
-                  <SuccessStoryCard key={story.id} story={story} />
+                {filteredStories.map((story) => (
+                  <SuccessStoryCard
+                    key={story.id}
+                    story={story}
+                    currentUser={currentUser}
+                    onStoryUpdate={handleStoryUpdate}
+                  />
                 ))}
               </div>
+            ) : (
+              <Card>
+                <CardContent className='pt-6 text-center py-12'>
+                  <div className='flex flex-col items-center justify-center'>
+                    <Search className='h-12 w-12 text-muted-foreground mb-4' />
+                    <h3 className='text-lg font-medium mb-2'>
+                      No stories found
+                    </h3>
+                    <p className='text-muted-foreground mb-4'>
+                      We couldn't find any success stories matching your search.
+                    </p>
+                    {storySearchQuery && (
+                      <Button onClick={() => setStorySearchQuery('')}>
+                        Clear Search
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Create Story Modal */}
+      <CreateStoryModal
+        isOpen={isCreateStoryModalOpen}
+        onClose={() => setIsCreateStoryModalOpen(false)}
+        onStoryCreated={handleStoryCreated}
+        currentUser={currentUser}
+      />
     </DashboardLayout>
   );
 }

@@ -60,5 +60,8 @@ export interface SuccessStory {
   read_time: string
   created_at?: string
   author?: User
+  milestone: string
+  image_url:string
+
 }
 
