@@ -167,15 +167,6 @@ function DesktopSidebar({
           ))}
         </nav>
       </div>
-
-      <div className="border-t p-4">
-        <div className="flex items-center justify-center">
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => toggleSidebar()}>
-            <Menu className="h-4 w-4 mr-2" />
-            <span>Toggle sidebar</span>
-          </Button>
-        </div>
-      </div>
     </>
   )
 }
@@ -213,14 +204,6 @@ function MobileSidebar({ pathname, navigationItems }: { pathname: string; naviga
         </nav>
       </div>
 
-      <div className="border-t p-4">
-        <div className="flex items-center justify-center">
-          <Button variant="ghost" size="sm" className="w-full" onClick={() => router.back()}>
-            <Menu className="h-4 w-4 mr-2" />
-            <span>Close sidebar</span>
-          </Button>
-        </div>
-      </div>
     </div>
   )
 }
