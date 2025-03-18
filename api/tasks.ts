@@ -39,10 +39,20 @@ export async function getAllTasks() {
       .order("createdat", { ascending: true });
 
     if (error) throw error;
+    console.log({data})
     return data || [];
   }, "Error fetching appointments");
 }
-
+export async function getAllTaskCompleted(){
+    return handleSupabaseOperation(async () => {
+      const { data, error } = await supabase
+        .from("completed_tasks")
+        .select("*")
+        .order("completed_at", { ascending: true });
+      if (error) throw error;
+      return data || [];
+    }, "Error fetching appointments");
+  }
 export async function deleteTask(id: string) {
   return handleSupabaseOperation(async () => {
     const { error } = await supabase.from("tasks").delete().eq("id", id);
