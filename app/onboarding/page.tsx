@@ -66,7 +66,6 @@ The output should be in this JSON format:
           })
         })
       }
-      console.log(data);
       // Submit and redirect to dashboard
       router.push("/dashboard");
     }
