@@ -16,6 +16,7 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { createTask, Task, Task } from "@/api";
 
 export default function OnboardingPage() {
   const router = useRouter();
@@ -55,7 +56,16 @@ The output should be in this JSON format:
         body: JSON.stringify({ prompt }),
       });
 
-      const data = await res.json();
+      const {data} = await res.json();
+      if(data){
+        data.map(async (task: Task) => {
+          await createTask(task).then(() => {
+            console.log(`task created successfully: ${task.title}`);
+          }).catch(error => {
+            console.error(`Error creating task: ${task.title}`, error);
+          })
+        })
+      }
       console.log(data);
       // Submit and redirect to dashboard
       router.push("/dashboard");
