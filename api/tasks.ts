@@ -39,7 +39,6 @@ export async function getAllTasks() {
       .order("createdat", { ascending: true });
 
     if (error) throw error;
-    console.log({data})
     return data || [];
   }, "Error fetching appointments");
 }
