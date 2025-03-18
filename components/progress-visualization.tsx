@@ -20,7 +20,7 @@ import {
 } from "recharts"
 import { Info, TrendingUp } from "lucide-react"
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { useMonthlyTaskData, useWeeklyTaskData } from "@/hooks/tasks"
+import { useMonthlyTaskData, useTaskCompleted, useWeeklyTaskData } from "@/hooks/tasks"
 
 
 
@@ -74,6 +74,7 @@ export function ProgressVisualization() {
   }
   const weeklyData = useWeeklyTaskData();
   const monthlyData = useMonthlyTaskData();
+  const { count:totalTaskCompleted, tasks } = useTaskCompleted();
   return (
     <Card>
       <CardHeader>
@@ -167,7 +168,7 @@ export function ProgressVisualization() {
               </div>
               <div className="p-3 border rounded-md">
                 <div className="text-sm text-muted-foreground">Tasks Completed</div>
-                <div className="text-2xl font-bold mt-1">86</div>
+                <div className="text-2xl font-bold mt-1">{totalTaskCompleted}</div>
               </div>
             </div>
           </TabsContent>
