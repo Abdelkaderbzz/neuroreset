@@ -16,9 +16,11 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, ArrowRight, Check } from "lucide-react";
-import { createTask, Task, Task } from "@/api";
+import { createTask, Task } from "@/api";
+import { useAppContext } from "@/contexts/app-context";
 
 export default function OnboardingPage() {
+  const { profile } = useAppContext();
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(20);
@@ -56,15 +58,17 @@ The output should be in this JSON format:
         body: JSON.stringify({ prompt }),
       });
 
-      const {data} = await res.json();
-      if(data){
+      const { data } = await res.json();
+      if (data) {
         data.map(async (task: Task) => {
-          await createTask(task).then(() => {
-            console.log(`task created successfully: ${task.title}`);
-          }).catch(error => {
-            console.error(`Error creating task: ${task.title}`, error);
-          })
-        })
+          await createTask(task, profile?.id)
+            .then(() => {
+              console.log(`task created successfully: ${task.title}`);
+            })
+            .catch((error) => {
+              console.error(`Error creating task: ${task.title}`, error);
+            });
+        });
       }
       // Submit and redirect to dashboard
       router.push("/dashboard");
