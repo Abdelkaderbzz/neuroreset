@@ -84,7 +84,7 @@ export default function DashboardPage() {
   }, []);
   useEffect(() => {
     async function fetchTasks() {
-      const t = await getAllTasks();
+      const t = await getAllTasks(profile.id);
       const c = await getCompletedTasksToday();
 
       setTasks(
@@ -96,14 +96,14 @@ export default function DashboardPage() {
       setCompletedTask(c);
     }
     fetchTasks();
-  }, []);
+  }, [profile.id]);
   const handleTaskComplete = (id: string, completed: boolean) => {
     if (completed) {
       markTaskAsCompleted(id);
-      const taskToAdd = tasks.find((task) => task.id === id)
+      const taskToAdd = tasks.find((task) => task.id === id);
       setCompletedTask((prev) => [
         ...(prev || []),
-        {...taskToAdd,task_id: id},
+        { ...taskToAdd, task_id: id },
       ]);
     } else {
       confirmDeletionTask(id);
@@ -183,7 +183,6 @@ export default function DashboardPage() {
       .getElementById("crisis-support")
       ?.scrollIntoView({ behavior: "smooth" });
   };
-
   return (
     <DashboardLayout>
       {showCrisisAlert && (

@@ -1,13 +1,12 @@
 import { supabase } from "@/lib/supabase";
 import { handleSupabaseOperation } from "@/lib/supabase-utils";
-import { useEffect, useState } from "react";
 export enum EPriority {
   High = "High",
   Medium = "Medium",
   Low = "Low",
 }
 
-interface Task {
+export interface Task {
   id: number;
   title: string;
   description: string;
@@ -15,13 +14,19 @@ interface Task {
   priority: EPriority;
 }
 
-export async function createTask(task: {
-  title: string;
-  description: string;
-  time: string;
-  priority: EPriority;
-}) {
-  const { data, error } = await supabase.from("tasks").insert([task]).select();
+export async function createTask(
+  task: {
+    title: string;
+    description: string;
+    time: string;
+    priority: EPriority;
+  },
+  user_id: string
+) {
+  const { data, error } = await supabase
+    .from("tasks")
+    .insert([{ ...task, user_id }])
+    .select();
 
   if (error) {
     console.error("Error creating task:", error);
@@ -31,18 +36,28 @@ export async function createTask(task: {
   return data;
 }
 
-export async function getAllTasks() {
+export async function getAllTasks(user_id: string) {
   return handleSupabaseOperation(async () => {
     const { data, error } = await supabase
       .from("tasks")
       .select("*")
+      .eq("user_id", user_id)
       .order("createdat", { ascending: true });
 
     if (error) throw error;
     return data || [];
   }, "Error fetching appointments");
 }
-
+export async function getAllTaskCompleted() {
+  return handleSupabaseOperation(async () => {
+    const { data, error } = await supabase
+      .from("completed_tasks")
+      .select("*")
+      .order("completed_at", { ascending: true });
+    if (error) throw error;
+    return data || [];
+  }, "Error fetching appointments");
+}
 export async function deleteTask(id: string) {
   return handleSupabaseOperation(async () => {
     const { error } = await supabase.from("tasks").delete().eq("id", id);
@@ -53,7 +68,7 @@ export async function deleteTask(id: string) {
 }
 export async function editTask(taskId: string, updates: Partial<Task>) {
   const { data, error } = await supabase
-    .from("Tasks")
+    .from("tasks")
     .update(updates)
     .eq("id", taskId)
     .select();
@@ -128,10 +143,10 @@ export async function confirmDeletionTask(taskId: string) {
 
   return true;
 }
-export async function getWeeklyTaskData(): Promise<
-  Array<{ day: string; completed: number; total: number }>
-> {
-    const totalTasks = await getAllTasks();
+export async function getWeeklyTaskData(
+  user_id: string
+): Promise<Array<{ day: string; completed: number; total: number }>> {
+  const totalTasks = await getAllTasks(user_id);
   const now = new Date();
   const startOfWeek = new Date(now);
   startOfWeek.setHours(0, 0, 0, 0);
@@ -181,8 +196,7 @@ export async function getWeeklyTaskData(): Promise<
   return weeklyData;
 }
 
-
-  export async function getMonthlyTaskData(): Promise<
+export async function getMonthlyTaskData(): Promise<
   Array<{ week: string; completion: number }>
 > {
   const now = new Date();
@@ -200,7 +214,8 @@ export async function getWeeklyTaskData(): Promise<
     throw new Error("Failed to fetch tasks");
   }
 
-  const weeklyData: { [key: string]: { completed: number; total: number } } = {};
+  const weeklyData: { [key: string]: { completed: number; total: number } } =
+    {};
 
   tasks.forEach((task) => {
     const completedAt = new Date(task.completed_at);
@@ -218,7 +233,7 @@ export async function getWeeklyTaskData(): Promise<
 
   const monthlyData = Object.entries(weeklyData).map(([week, counts]) => ({
     week,
-    completion: Math.round((counts.completed / counts.total * 7) * 100),
+    completion: Math.round((counts.completed / counts.total) * 7 * 100),
   }));
 
   return monthlyData;

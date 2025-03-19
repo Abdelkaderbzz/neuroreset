@@ -1,61 +1,104 @@
-"use client"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Label } from "@/components/ui/label"
-import { Slider } from "@/components/ui/slider"
-import { Textarea } from "@/components/ui/textarea"
-import { Progress } from "@/components/ui/progress"
-import { ArrowLeft, ArrowRight, Check } from "lucide-react"
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
+import { createTask, Task } from "@/api";
+import { useAppContext } from "@/contexts/app-context";
 
 export default function OnboardingPage() {
-  const router = useRouter()
-  const [step, setStep] = useState(1)
-  const [progress, setProgress] = useState(20)
+  const { profile } = useAppContext();
+  const router = useRouter();
+  const [step, setStep] = useState(1);
+  const [progress, setProgress] = useState(20);
   const [formData, setFormData] = useState({
     addictionType: "",
     duration: 0,
     severity: 0,
     triggers: "",
     goals: "",
-  })
+  });
 
-  const totalSteps = 5
+  const totalSteps = 5;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step < totalSteps) {
-      setStep(step + 1)
-      setProgress(((step + 1) / totalSteps) * 100)
+      setStep(step + 1);
+      setProgress(((step + 1) / totalSteps) * 100);
     } else {
-      // Submit and redirect to dashboard
-      router.push("/dashboard")
+      const prompt = `I am struggling with addiction to ${formData.addictionType}. My addiction severity is ${formData.severity} out of 10, and I have been dealing with it for ${formData.duration} years. My main goals are: ${formData.goals}. I also have specific triggers: ${formData.triggers}, which I want to avoid. Based on this information, generate a structured list of daily habits that can help me recover from my addiction, avoid my triggers, and achieve my goals.
+
+The output should be in this JSON format:
+[
+    {
+        "title": "Habit title",
+        "description": "Detailed explanation of the habit and how it helps.",
+        "time": "Scheduled time for the habit (e.g., 8:00 AM)",
+        "priority": "Low/Medium/High"
     }
-  }
+]
+    Make sure the habits are practical, achievable, and relevant to my addiction recovery journey.
+`;
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+
+      const { data } = await res.json();
+      if (data) {
+        data.map(async (task: Task) => {
+          await createTask(task, profile?.id)
+            .then(() => {
+              console.log(`task created successfully: ${task.title}`);
+            })
+            .catch((error) => {
+              console.error(`Error creating task: ${task.title}`, error);
+            });
+        });
+      }
+      // Submit and redirect to dashboard
+      router.push("/dashboard");
+    }
+  };
 
   const handleBack = () => {
     if (step > 1) {
-      setStep(step - 1)
-      setProgress(((step - 1) / totalSteps) * 100)
+      setStep(step - 1);
+      setProgress(((step - 1) / totalSteps) * 100);
     }
-  }
+  };
 
   const handleChange = (field: string, value: any) => {
     setFormData({
       ...formData,
       [field]: value,
-    })
-  }
+    });
+  };
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
       <div className="w-full max-w-2xl">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold mb-2">Personalize Your Recovery Journey</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            Personalize Your Recovery Journey
+          </h1>
           <p className="text-muted-foreground">
-            Answer a few questions to help us create your personalized recovery plan.
+            Answer a few questions to help us create your personalized recovery
+            plan.
           </p>
         </div>
 
@@ -79,10 +122,13 @@ export default function OnboardingPage() {
               {step === 5 && "What are your recovery goals?"}
             </CardTitle>
             <CardDescription>
-              {step === 1 && "Select the option that best describes your situation."}
+              {step === 1 &&
+                "Select the option that best describes your situation."}
               {step === 2 && "This helps us understand your history."}
-              {step === 3 && "Rate from 1 (minimal impact) to 10 (severe impact)."}
-              {step === 4 && "Describe situations, emotions, or environments that trigger your addiction."}
+              {step === 3 &&
+                "Rate from 1 (minimal impact) to 10 (severe impact)."}
+              {step === 4 &&
+                "Describe situations, emotions, or environments that trigger your addiction."}
               {step === 5 && "What do you hope to achieve through recovery?"}
             </CardDescription>
           </CardHeader>
@@ -119,7 +165,9 @@ export default function OnboardingPage() {
             {step === 2 && (
               <RadioGroup
                 value={formData.duration.toString()}
-                onValueChange={(value) => handleChange("duration", Number.parseInt(value))}
+                onValueChange={(value) =>
+                  handleChange("duration", Number.parseInt(value))
+                }
                 className="space-y-3"
               >
                 <div className="flex items-center space-x-2">
@@ -154,7 +202,9 @@ export default function OnboardingPage() {
                     min={1}
                     max={10}
                     step={1}
-                    onValueChange={(value) => handleChange("severity", value[0])}
+                    onValueChange={(value) =>
+                      handleChange("severity", value[0])
+                    }
                   />
                   <div className="flex justify-between text-xs text-muted-foreground">
                     <span>Minimal</span>
@@ -188,7 +238,11 @@ export default function OnboardingPage() {
             )}
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button variant="outline" onClick={handleBack} disabled={step === 1}>
+            <Button
+              variant="outline"
+              onClick={handleBack}
+              disabled={step === 1}
+            >
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back
             </Button>
@@ -209,6 +263,5 @@ export default function OnboardingPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
-

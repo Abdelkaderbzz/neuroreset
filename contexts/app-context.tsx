@@ -52,6 +52,7 @@ export interface UserSettings {
 }
 
 export interface UserProfile {
+  id: string;
   name: string
   email: string
   sobrietyDate: string

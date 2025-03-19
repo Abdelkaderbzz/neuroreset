@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -12,38 +12,59 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Plus } from "lucide-react"
-import { z } from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import { useForm } from "react-hook-form"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
-import { createTask, EPriority } from "@/api"
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Plus } from "lucide-react";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { createTask, EPriority } from "@/api";
+import { useAppContext } from "@/contexts/app-context";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
   description: z.string().min(1, "Description is required"),
   time: z.string(),
-  priority: z.enum([EPriority.Low, EPriority.Medium, EPriority.High]).default(EPriority.Medium),
-})
+  priority: z
+    .enum([EPriority.Low, EPriority.Medium, EPriority.High])
+    .default(EPriority.Medium),
+});
 
-type TaskFormValues = z.infer<typeof taskSchema>
+type TaskFormValues = z.infer<typeof taskSchema>;
 
 interface AddTaskDialogProps {
-  onAddTask: (task: TaskFormValues) => void
+  onAddTask: (task: TaskFormValues) => void;
   editTask?: {
-    id: string
-    title: string
-    description: string
-    time: string
-    priority?: EPriority
-  }
-  onEditComplete?: () => void
+    id: string;
+    title: string;
+    description: string;
+    time: string;
+    priority?: EPriority;
+  };
+  onEditComplete?: () => void;
 }
 
-export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDialogProps) {
-  const [open, setOpen] = useState(false)
+export function AddTaskDialog({
+  onAddTask,
+  editTask,
+  onEditComplete,
+}: AddTaskDialogProps) {
+  const { profile } = useAppContext();
+  const [open, setOpen] = useState(false);
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
     defaultValues: editTask
@@ -56,24 +77,23 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
       : {
           title: "",
           description: "",
-          time: '',
+          time: "",
           priority: EPriority.Medium,
         },
-  })
+  });
 
   async function onSubmit(values: TaskFormValues) {
-    
-    const newTask = await createTask(values)
-    if(newTask && newTask.length > 0) onAddTask(newTask[0])
+    const newTask = await createTask(values, profile?.id);
+    if (newTask && newTask.length > 0) onAddTask(newTask[0]);
     form.reset({
       title: "",
       description: "",
-      time: '',
+      time: "",
       priority: EPriority.Medium,
-    })
-    setOpen(false)
+    });
+    setOpen(false);
     if (editTask && onEditComplete) {
-      onEditComplete()
+      onEditComplete();
     }
   }
 
@@ -95,7 +115,9 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
         <DialogHeader>
           <DialogTitle>{editTask ? "Edit Task" : "Add New Task"}</DialogTitle>
           <DialogDescription>
-            {editTask ? "Update the details of your recovery task." : "Create a custom task for your recovery plan."}
+            {editTask
+              ? "Update the details of your recovery task."
+              : "Create a custom task for your recovery plan."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -121,7 +143,11 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Brief description of the task" className="resize-none" {...field} />
+                    <Textarea
+                      placeholder="Brief description of the task"
+                      className="resize-none"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -149,7 +175,10 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -168,12 +197,13 @@ export function AddTaskDialog({ onAddTask, editTask, onEditComplete }: AddTaskDi
             </div>
 
             <DialogFooter>
-              <Button type="submit">{editTask ? "Save Changes" : "Add Task"}</Button>
+              <Button type="submit">
+                {editTask ? "Save Changes" : "Add Task"}
+              </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
-
