@@ -1,44 +1,128 @@
-"use client"
+"use client";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useAppContext } from "@/contexts/app-context";
 
-import type React from "react"
+export const signupFormSchema = z
+  .object({
+    username: z.string().min(3, "Username must be at least 3 characters"),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"], // This attaches the error to the confirmPassword field
+  });
 
-import { useState } from "react"
-import Link from "next/link"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Separator } from "@/components/ui/separator"
-import { Github, Mail } from "lucide-react"
+export type SignupFormData = z.infer<typeof signupFormSchema>;
+
+export const loginFormSchema = z.object({
+  email: z.string().trim().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export type LoginFormData = z.infer<typeof loginFormSchema>;
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const { updateProfile } = useAppContext();
+  const formSignUp = useForm<SignupFormData>({
+    resolver: zodResolver(signupFormSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+  const formLogin = useForm<LoginFormData>({
+    resolver: zodResolver(loginFormSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+  const handleSignup = async (data: SignupFormData) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch("/api/signup", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+      const result = await response.json();
 
-    // Simulate login process
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/dashboard")
-    }, 1500)
-  }
+      if (response.ok) {
+        router.push("/onboarding");
+      } else {
+        alert(result.error || "Failed to sign up");
+      }
+    } catch (error) {
+      console.error("Error during signup:", error);
+      alert("Failed to sign up");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  const handleLogin = async (data: LoginFormData) => {
+    setIsLoading(true);
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    const { email, password } = data;
 
-    // Simulate signup process
-    setTimeout(() => {
-      setIsLoading(false)
-      router.push("/onboarding")
-    }, 1500)
-  }
+    try {
+      // Call the API route
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: email.trim(), password }),
+      });
 
+      const result = await response.json();
+
+      if (response.ok) {
+        const { user } = result.data;
+        updateProfile(user);
+        router.push("/dashboard");
+      } else {
+        throw new Error(result.error || "Failed to login");
+      }
+    } catch (error: any) {
+      console.error("Error during login:", error);
+      alert(error.message || "Failed to login");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12">
       <Card className="w-full max-w-md">
@@ -53,66 +137,165 @@ export default function LoginPage() {
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input id="email" type="email" placeholder="name@example.com" required />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link href="/forgot-password" className="text-sm text-blue-600 hover:text-blue-800">
-                      Forgot password?
-                    </Link>
+              <Form {...formLogin}>
+                <form
+                  onSubmit={formLogin.handleSubmit(handleLogin)}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <FormField
+                      control={formLogin.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="login-email"
+                              type="email"
+                              placeholder="name@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <Input id="password" type="password" required />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Logging in..." : "Login"}
-                </Button>
-              </form>
+                  <div className="space-y-2">
+                    <FormField
+                      control={formLogin.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="login-password"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Logging in..." : "Login"}
+                  </Button>
+                </form>
+              </Form>
             </TabsContent>
             <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="John Doe" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
-                  <Input id="signup-email" type="email" placeholder="name@example.com" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
-                  <Input id="signup-password" type="password" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input id="confirm-password" type="password" required />
-                </div>
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Creating account..." : "Create account"}
-                </Button>
-              </form>
+              <Form {...formSignUp}>
+                <form
+                  onSubmit={formSignUp.handleSubmit(handleSignup)}
+                  className="space-y-4"
+                >
+                  <div className="space-y-2">
+                    <FormField
+                      control={formSignUp.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="name"
+                              placeholder="John Doe"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={formSignUp.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="signup-email"
+                              type="email"
+                              placeholder="name@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={formSignUp.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="signup-password"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <FormField
+                      control={formSignUp.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="confirm-password"
+                              type="password"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Creating account..." : "Create account"}
+                  </Button>
+                </form>
+              </Form>
             </TabsContent>
           </Tabs>
-
-
-
         </CardContent>
         <CardFooter className="text-center text-sm text-muted-foreground">
           By continuing, you agree to our{" "}
-          <Link href="/terms" className="underline underline-offset-4 hover:text-primary">
+          <Link
+            href="/terms"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Terms of Service
           </Link>{" "}
           and{" "}
-          <Link href="/privacy" className="underline underline-offset-4 hover:text-primary">
+          <Link
+            href="/privacy"
+            className="underline underline-offset-4 hover:text-primary"
+          >
             Privacy Policy
           </Link>
           .
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
-
