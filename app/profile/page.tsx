@@ -1,23 +1,30 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Textarea } from "@/components/ui/textarea"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Separator } from "@/components/ui/separator"
-import { Progress } from "@/components/ui/progress"
-import { useToast } from "@/components/ui/use-toast"
-import { useAppContext } from "@/contexts/app-context"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
+import { useAppContext, UserProfile } from "@/contexts/app-context";
 import {
   Calendar,
   Camera,
@@ -33,22 +40,30 @@ import {
   Trophy,
   User,
   UserCog,
-} from "lucide-react"
+} from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
-  const { toast } = useToast()
-  const router = useRouter()
-  const { profile, updateProfile, goals } = useAppContext()
+  const { toast } = useToast();
+  const router = useRouter();
+  const {profile, updateProfile, goals } = useAppContext();
+  // const [profile, setProfile] = useState<UserProfile | null>(null);
+  
 
-  const [isEditing, setIsEditing] = useState(false)
+  const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    name: profile.name,
-    email: profile.email,
-    phone: "555-123-4567",
-    bio: "I'm on a journey to recovery and self-improvement. Taking it one day at a time and grateful for this supportive community.",
-    sobrietyDate: new Date(profile.sobrietyDate).toISOString().split("T")[0],
-    recoveryType: profile.recoveryType,
-    emergencyContact: "James Wilson (Sponsor) - 555-987-6543",
+    name: profile?.name,
+    email: profile?.email,
+    phone: profile?.phone || "no phone number",
+    bio: profile?.bio,
+    sobrietyDate: (profile?.sobrietyDate
+      ? new Date(profile?.sobrietyDate)
+      : new Date()
+    )
+      .toISOString()
+      ?.split("T")[0],
+    recovery_type: profile?.recovery_type,
+    emergency_contact: profile?.emergency_contact,
     notifications: {
       email: true,
       push: true,
@@ -59,48 +74,111 @@ export default function ProfilePage() {
       showJournal: false,
       showGoals: true,
     },
-  })
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
+  });
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        name: profile.name,
+        email: profile.email,
+        phone: profile.phone || "no phone number",
+        bio: profile.bio,
+        sobrietyDate: (profile.sobrietyDate
+          ? new Date(profile.sobrietyDate)
+          : new Date()
+        )
+          .toISOString()
+          ?.split("T")[0],
+        recovery_type: profile.recovery_type,
+        emergency_contact: profile.emergency_contact,
+        notifications: {
+          email: true,
+          push: true,
+          sms: false,
+        },
+        privacy: {
+          showProgress: true,
+          showJournal: false,
+          showGoals: true,
+        },
+      });
+    }
+  }, [profile]);
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
-  const handleToggleChange = (field: string, section: "notifications" | "privacy") => {
+  const handleToggleChange = (
+    field: string,
+    section: "notifications" | "privacy"
+  ) => {
     setFormData((prev) => ({
       ...prev,
       [section]: {
         ...prev[section],
         [field]: !prev[section][field],
       },
-    }))
-  }
+    }));
+  };
 
-  const handleSaveProfile = () => {
-    // Update profile in context
-    updateProfile({
-      name: formData.name,
-      email: formData.email,
-      sobrietyDate: new Date(formData.sobrietyDate).toISOString(),
-      recoveryType: formData.recoveryType,
-    })
+  const handleSaveProfile = async () => {
+    try {
+      // Update profile in context
 
-    setIsEditing(false)
+      const updatedProfile = {
+        id: profile?.id,
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        bio: formData.bio,
+        emergency_contact: formData.emergency_contact,
+        sobrietydate: new Date(formData.sobrietyDate).toISOString(),
+        recovery_type: formData.recovery_type,
+      };
 
-    toast({
-      title: "Profile updated",
-      description: "Your profile has been updated successfully.",
-      variant: "success",
-    })
-  }
+      // Update profile in the backend
+      const response = await fetch("/api/profile", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatedProfile),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to update profile");
+      }
+      // Update profile in context
+      updateProfile(updatedProfile);
+
+      setIsEditing(false);
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
+        variant: "success",
+      });
+    } catch (error) {
+      console.error("Error updating profile:", error);
+
+      toast({
+        title: "Error",
+        description: "An error occurred while updating your profile.",
+        variant: "destructive",
+      });
+    }
+  };
 
   // Calculate sobriety days
   const sobrietyDays = Math.floor(
-    (new Date().getTime() - new Date(profile.sobrietyDate).getTime()) / (1000 * 60 * 60 * 24),
-  )
+    (new Date().getTime() - new Date(profile?.sobrietyDate || new Date().toISOString()).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
 
   // Achievements data
   const achievements = [
@@ -108,7 +186,9 @@ export default function ProfilePage() {
       id: "a1",
       title: "First Day Complete",
       description: "Successfully completed your first day of recovery",
-      icon: <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />,
+      icon: (
+        <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+      ),
       date: "March 10, 2025",
       unlocked: true,
     },
@@ -144,7 +224,7 @@ export default function ProfilePage() {
       date: "April 9, 2025",
       unlocked: false,
     },
-  ]
+  ];
 
   // Activity data
   const recentActivity = [
@@ -178,7 +258,7 @@ export default function ProfilePage() {
       title: "Attended session with Dr. Sarah Johnson",
       time: "March 15, 2025",
     },
-  ]
+  ];
 
   return (
     <DashboardLayout>
@@ -222,9 +302,9 @@ export default function ProfilePage() {
                 <CardContent className="flex flex-col items-center text-center">
                   <div className="relative mb-4">
                     <Avatar className="h-24 w-24">
-                      <AvatarImage src={profile.avatar} alt={profile.name} />
+                      <AvatarImage src={profile?.avatar} alt={profile?.name} />
                       <AvatarFallback className="text-2xl">
-                        {profile.name
+                        {profile?.name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")}
@@ -248,17 +328,26 @@ export default function ProfilePage() {
                       <span>Recovery Progress</span>
                       <span>{sobrietyDays} days</span>
                     </div>
-                    <Progress value={(sobrietyDays / 30) * 100} className="h-2" />
+                    <Progress
+                      value={(sobrietyDays / 30) * 100}
+                      className="h-2"
+                    />
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mt-6 w-full">
                     <div className="bg-muted rounded-lg p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Sobriety Date</p>
-                      <p className="font-medium">{new Date(profile.sobrietyDate).toLocaleDateString()}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Sobriety Date
+                      </p>
+                      <p className="font-medium">
+                        {new Date(profile?.sobrietyDate || new Date().toISOString()).toLocaleDateString()}
+                      </p>
                     </div>
                     <div className="bg-muted rounded-lg p-3 text-center">
-                      <p className="text-xs text-muted-foreground">Recovery Type</p>
-                      <p className="font-medium">{profile.recoveryType}</p>
+                      <p className="text-xs text-muted-foreground">
+                        Recovery Type
+                      </p>
+                      <p className="font-medium">{profile?.recovery_type}</p>
                     </div>
                   </div>
 
@@ -292,16 +381,25 @@ export default function ProfilePage() {
               <Card className="md:col-span-2">
                 <CardHeader>
                   <CardTitle>Profile Details</CardTitle>
-                  <CardDescription>Manage your personal information</CardDescription>
+                  <CardDescription>
+                    Manage your personal information
+                  </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">Full Name</Label>
                       {isEditing ? (
-                        <Input id="name" name="name" value={formData.name} onChange={handleInputChange} />
+                        <Input
+                          id="name"
+                          name="name"
+                          value={formData.name}
+                          onChange={handleInputChange}
+                        />
                       ) : (
-                        <div className="p-2 border rounded-md bg-muted/30">{formData.name}</div>
+                        <div className="p-2 border rounded-md bg-muted/30">
+                          {formData.name}
+                        </div>
                       )}
                     </div>
 
@@ -316,16 +414,25 @@ export default function ProfilePage() {
                           onChange={handleInputChange}
                         />
                       ) : (
-                        <div className="p-2 border rounded-md bg-muted/30">{formData.email}</div>
+                        <div className="p-2 border rounded-md bg-muted/30">
+                          {formData.email}
+                        </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone Number</Label>
                       {isEditing ? (
-                        <Input id="phone" name="phone" value={formData.phone} onChange={handleInputChange} />
+                        <Input
+                          id="phone"
+                          name="phone"
+                          value={formData.phone}
+                          onChange={handleInputChange}
+                        />
                       ) : (
-                        <div className="p-2 border rounded-md bg-muted/30">{formData.phone}</div>
+                        <div className="p-2 border rounded-md bg-muted/30">
+                          {formData.phone}
+                        </div>
                       )}
                     </div>
 
@@ -341,36 +448,42 @@ export default function ProfilePage() {
                         />
                       ) : (
                         <div className="p-2 border rounded-md bg-muted/30">
-                          {new Date(profile.sobrietyDate).toLocaleDateString()}
+                          {new Date(profile?.sobrietyDate || new Date().toISOString()).toLocaleDateString()}
                         </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="recoveryType">Recovery Type</Label>
+                      <Label htmlFor="recovery_type">Recovery Type</Label>
                       {isEditing ? (
                         <Input
-                          id="recoveryType"
-                          name="recoveryType"
-                          value={formData.recoveryType}
+                          id="recovery_type"
+                          name="recovery_type"
+                          value={formData.recovery_type}
                           onChange={handleInputChange}
                         />
                       ) : (
-                        <div className="p-2 border rounded-md bg-muted/30">{formData.recoveryType}</div>
+                        <div className="p-2 border rounded-md bg-muted/30">
+                          {formData.recovery_type}
+                        </div>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="emergencyContact">Emergency Contact</Label>
+                      <Label htmlFor="emergencyContact">
+                        Emergency Contact
+                      </Label>
                       {isEditing ? (
                         <Input
                           id="emergencyContact"
                           name="emergencyContact"
-                          value={formData.emergencyContact}
+                          value={formData.emergency_contact}
                           onChange={handleInputChange}
                         />
                       ) : (
-                        <div className="p-2 border rounded-md bg-muted/30">{formData.emergencyContact}</div>
+                        <div className="p-2 border rounded-md bg-muted/30">
+                          {formData.emergency_contact}
+                        </div>
                       )}
                     </div>
                   </div>
@@ -378,9 +491,17 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
                     {isEditing ? (
-                      <Textarea id="bio" name="bio" value={formData.bio} onChange={handleInputChange} rows={4} />
+                      <Textarea
+                        id="bio"
+                        name="bio"
+                        value={formData.bio}
+                        onChange={handleInputChange}
+                        rows={4}
+                      />
                     ) : (
-                      <div className="p-2 border rounded-md bg-muted/30 min-h-[100px]">{formData.bio}</div>
+                      <div className="p-2 border rounded-md bg-muted/30 min-h-[100px]">
+                        {formData.bio}
+                      </div>
                     )}
                   </div>
                 </CardContent>
@@ -391,9 +512,15 @@ export default function ProfilePage() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <div>
                     <CardTitle>Recovery Goals</CardTitle>
-                    <CardDescription>Track your progress towards your goals</CardDescription>
+                    <CardDescription>
+                      Track your progress towards your goals
+                    </CardDescription>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => router.push("/goals")}>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push("/goals")}
+                  >
                     View All Goals
                   </Button>
                 </CardHeader>
@@ -402,7 +529,9 @@ export default function ProfilePage() {
                     {goals.slice(0, 3).map((goal) => (
                       <div key={goal.id} className="border rounded-lg p-4">
                         <h4 className="font-medium">{goal.title}</h4>
-                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">{goal.description}</p>
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-1">
+                          {goal.description}
+                        </p>
                         <div className="mt-3">
                           <div className="flex justify-between text-sm mb-1">
                             <span>Progress</span>
@@ -412,7 +541,10 @@ export default function ProfilePage() {
                         </div>
                         <div className="flex items-center gap-1 mt-3 text-xs text-muted-foreground">
                           <Calendar className="h-3 w-3" />
-                          <span>Target: {new Date(goal.targetDate).toLocaleDateString()}</span>
+                          <span>
+                            Target:{" "}
+                            {new Date(goal.targetDate).toLocaleDateString()}
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -427,7 +559,9 @@ export default function ProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle>Your Achievements</CardTitle>
-                <CardDescription>Milestones and badges you've earned on your recovery journey</CardDescription>
+                <CardDescription>
+                  Milestones and badges you've earned on your recovery journey
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -444,9 +578,13 @@ export default function ProfilePage() {
                       <div>
                         <div className="flex items-center gap-2">
                           <h4 className="font-medium">{achievement.title}</h4>
-                          {!achievement.unlocked && <Badge variant="outline">Locked</Badge>}
+                          {!achievement.unlocked && (
+                            <Badge variant="outline">Locked</Badge>
+                          )}
                         </div>
-                        <p className="text-sm text-muted-foreground mt-1">{achievement.description}</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {achievement.description}
+                        </p>
                         {achievement.unlocked && (
                           <div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
                             <Trophy className="h-3 w-3" />
@@ -471,18 +609,33 @@ export default function ProfilePage() {
             <Card>
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>Your recent actions and progress</CardDescription>
+                <CardDescription>
+                  Your recent actions and progress
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentActivity.map((activity) => (
-                    <div key={activity.id} className="flex items-start gap-3 p-3 border rounded-lg">
+                    <div
+                      key={activity.id}
+                      className="flex items-start gap-3 p-3 border rounded-lg"
+                    >
                       <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                        {activity.type === "task" && <CheckCircle2 className="h-4 w-4 text-green-600" />}
-                        {activity.type === "journal" && <Edit className="h-4 w-4 text-blue-600" />}
-                        {activity.type === "community" && <User className="h-4 w-4 text-purple-600" />}
-                        {activity.type === "goal" && <Trophy className="h-4 w-4 text-amber-600" />}
-                        {activity.type === "session" && <Calendar className="h-4 w-4 text-red-600" />}
+                        {activity.type === "task" && (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        )}
+                        {activity.type === "journal" && (
+                          <Edit className="h-4 w-4 text-blue-600" />
+                        )}
+                        {activity.type === "community" && (
+                          <User className="h-4 w-4 text-purple-600" />
+                        )}
+                        {activity.type === "goal" && (
+                          <Trophy className="h-4 w-4 text-amber-600" />
+                        )}
+                        {activity.type === "session" && (
+                          <Calendar className="h-4 w-4 text-red-600" />
+                        )}
                       </div>
                       <div className="flex-1">
                         <p className="font-medium">{activity.title}</p>
@@ -530,43 +683,63 @@ export default function ProfilePage() {
                 <Separator />
 
                 <div className="space-y-4">
-                  <h3 className="text-lg font-medium">Notification Preferences</h3>
+                  <h3 className="text-lg font-medium">
+                    Notification Preferences
+                  </h3>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="email-notifications">Email Notifications</Label>
-                        <p className="text-sm text-muted-foreground">Receive updates and reminders via email</p>
+                        <Label htmlFor="email-notifications">
+                          Email Notifications
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive updates and reminders via email
+                        </p>
                       </div>
                       <Switch
                         id="email-notifications"
                         checked={formData.notifications.email}
-                        onCheckedChange={() => handleToggleChange("email", "notifications")}
+                        onCheckedChange={() =>
+                          handleToggleChange("email", "notifications")
+                        }
                         disabled={!isEditing}
                       />
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="push-notifications">Push Notifications</Label>
-                        <p className="text-sm text-muted-foreground">Receive notifications on your device</p>
+                        <Label htmlFor="push-notifications">
+                          Push Notifications
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive notifications on your device
+                        </p>
                       </div>
                       <Switch
                         id="push-notifications"
                         checked={formData.notifications.push}
-                        onCheckedChange={() => handleToggleChange("push", "notifications")}
+                        onCheckedChange={() =>
+                          handleToggleChange("push", "notifications")
+                        }
                         disabled={!isEditing}
                       />
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="sms-notifications">SMS Notifications</Label>
-                        <p className="text-sm text-muted-foreground">Receive text messages for important updates</p>
+                        <Label htmlFor="sms-notifications">
+                          SMS Notifications
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Receive text messages for important updates
+                        </p>
                       </div>
                       <Switch
                         id="sms-notifications"
                         checked={formData.notifications.sms}
-                        onCheckedChange={() => handleToggleChange("sms", "notifications")}
+                        onCheckedChange={() =>
+                          handleToggleChange("sms", "notifications")
+                        }
                         disabled={!isEditing}
                       />
                     </div>
@@ -581,25 +754,35 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="show-progress">Show Progress</Label>
-                        <p className="text-sm text-muted-foreground">Allow others to see your recovery progress</p>
+                        <p className="text-sm text-muted-foreground">
+                          Allow others to see your recovery progress
+                        </p>
                       </div>
                       <Switch
                         id="show-progress"
                         checked={formData.privacy.showProgress}
-                        onCheckedChange={() => handleToggleChange("showProgress", "privacy")}
+                        onCheckedChange={() =>
+                          handleToggleChange("showProgress", "privacy")
+                        }
                         disabled={!isEditing}
                       />
                     </div>
 
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
-                        <Label htmlFor="show-journal">Share Journal Entries</Label>
-                        <p className="text-sm text-muted-foreground">Allow others to see your public journal entries</p>
+                        <Label htmlFor="show-journal">
+                          Share Journal Entries
+                        </Label>
+                        <p className="text-sm text-muted-foreground">
+                          Allow others to see your public journal entries
+                        </p>
                       </div>
                       <Switch
                         id="show-journal"
                         checked={formData.privacy.showJournal}
-                        onCheckedChange={() => handleToggleChange("showJournal", "privacy")}
+                        onCheckedChange={() =>
+                          handleToggleChange("showJournal", "privacy")
+                        }
                         disabled={!isEditing}
                       />
                     </div>
@@ -607,12 +790,16 @@ export default function ProfilePage() {
                     <div className="flex items-center justify-between">
                       <div className="space-y-0.5">
                         <Label htmlFor="show-goals">Share Goals</Label>
-                        <p className="text-sm text-muted-foreground">Allow others to see your recovery goals</p>
+                        <p className="text-sm text-muted-foreground">
+                          Allow others to see your recovery goals
+                        </p>
                       </div>
                       <Switch
                         id="show-goals"
                         checked={formData.privacy.showGoals}
-                        onCheckedChange={() => handleToggleChange("showGoals", "privacy")}
+                        onCheckedChange={() =>
+                          handleToggleChange("showGoals", "privacy")
+                        }
                         disabled={!isEditing}
                       />
                     </div>
@@ -640,6 +827,5 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </DashboardLayout>
-  )
+  );
 }
-
