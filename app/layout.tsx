@@ -1,28 +1,35 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { AppProvider } from "@/contexts/app-context"
-import { Toaster } from "@/components/ui/toaster"
+import type React from 'react';
+import type { Metadata } from 'next';
+import { Inter } from 'next/font/google';
+import './globals.css';
+import { ThemeProvider } from '@/components/theme-provider';
+import { AppProvider } from '@/contexts/app-context';
+import { Toaster } from '@/components/ui/toaster';
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "NeuroReset - Addiction Recovery Platform",
-  description: "A personalized platform for addiction recovery and support",
-    generator: 'v0.dev'
-}
+  title: 'NeuroReset - Addiction Recovery Platform',
+  description: 'A personalized platform for addiction recovery and support',
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang='en' suppressHydrationWarning>
+      <head>
+        <link rel='icon' href='/images/favicon.png' type='image/png' />
+      </head>
       <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute='class'
+          defaultTheme='light'
+          enableSystem
+          disableTransitionOnChange
+        >
           <AppProvider>
             {children}
             <Toaster />
@@ -30,9 +37,7 @@ export default function RootLayout({
         </ThemeProvider>
       </body>
     </html>
-  )
+  );
 }
 
-
-
-import './globals.css'
+import './globals.css';

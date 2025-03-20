@@ -264,11 +264,11 @@ const sampleGoals: Goal[] = [
 ];
 
 const defaultUserProfile: UserProfile = {
-  name: "Alex Johnson",
-  email: "alex@example.com",
-  sobrietyDate: "2025-03-10T00:00:00Z",
-  recoveryType: "Alcohol",
-  avatar: "/placeholder.svg?height=128&width=128",
+  name: 'Alex Johnson',
+  email: 'alex@example.com',
+  sobrietyDate: '2025-03-10T00:00:00Z',
+  recoveryType: 'Alcohol',
+  avatar:'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=40&h=40&fit=crop',
 };
 
 const defaultUserSettings: UserSettings = {
@@ -359,7 +359,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           .from("users")
           .select()
           .eq("id", profileId);
-        console.log({ profileData });
         setProfile(profileData?.[0] || defaultUserProfile);
         localStorage.setItem(
           "neuroReset_profile",

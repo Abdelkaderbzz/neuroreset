@@ -17,7 +17,6 @@ import type { Post, User, Comment } from '@/types/community';
 import { formatTimeAgo } from '@/utils/date-utils';
 import { supabase } from '@/lib/supabase';
 
-
 interface PostCardProps {
   post: Post;
   currentUser: User;
@@ -32,7 +31,6 @@ export function PostCard({ post, currentUser, onPostUpdate }: PostCardProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [isLoadingComments, setIsLoadingComments] = useState(false);
   const [showComments, setShowComments] = useState(false);
-
 
   // Fetch comments when showComments is toggled to true
   useEffect(() => {
@@ -89,6 +87,12 @@ export function PostCard({ post, currentUser, onPostUpdate }: PostCardProps) {
           .delete()
           .match({ post_id: post.id, user_id: currentUser.id });
 
+        // Decrease likes_count in posts table
+        await supabase
+          .from('posts')
+          .update({ likes_count: post.likes_count - 1 })
+          .eq('id', post.id);
+
         // Update post in UI
         onPostUpdate({
           ...post,
@@ -100,6 +104,12 @@ export function PostCard({ post, currentUser, onPostUpdate }: PostCardProps) {
         await supabase
           .from('post_likes')
           .insert({ post_id: post.id, user_id: currentUser.id });
+
+        // Increase likes_count in posts table
+        await supabase
+          .from('posts')
+          .update({ likes_count: post.likes_count + 1 })
+          .eq('id', post.id);
 
         // Update post in UI
         onPostUpdate({

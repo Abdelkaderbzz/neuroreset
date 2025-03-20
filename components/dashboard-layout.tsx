@@ -21,14 +21,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { BarChart3, Calendar, Home, LifeBuoy, Menu, MessageSquare, Search, Settings, User, Users } from "lucide-react"
+import Image from "next/image"
+import { useAppContext } from "@/contexts/app-context"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+
   const pathname = usePathname()
-  const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
@@ -139,25 +141,35 @@ function DesktopSidebar({
 }: { pathname: string; navigationItems: any[]; toggleSidebar: () => void }) {
   return (
     <>
-      <div className="flex h-14 items-center border-b px-4">
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-xs font-bold">
-            NR
-          </div>
-          <span className="font-semibold">NeuroReset</span>
+      <div className='flex h-14 items-center border-b px-4'>
+        <div className='flex items-center gap-2'>
+          <Image
+            src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-03-20%20at%2016.12.39-fQkvfFNQ8nR8LVt67CpgolNhp5ptMc.png'
+            alt='NeuroReset Logo'
+            width={30}
+            height={30}
+            className='rounded-xl'
+          />
+          <span
+            className={
+              'ml-2 text-l font-bold transition-colors duration-300 text-purple-600'
+            }
+          >
+            NeuroReset
+          </span>
         </div>
       </div>
 
-      <div className="flex-1 overflow-auto py-2">
-        <nav className="grid gap-1 px-2">
+      <div className='flex-1 overflow-auto py-2'>
+        <nav className='grid gap-1 px-2'>
           {navigationItems.map((item) => (
             <Link
               key={item.name}
               href={item.href}
               className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors ${
                 pathname === item.href
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
+                  ? 'bg-accent text-accent-foreground'
+                  : 'hover:bg-accent hover:text-accent-foreground'
               }`}
             >
               {item.icon}
@@ -167,7 +179,7 @@ function DesktopSidebar({
         </nav>
       </div>
     </>
-  )
+  );
 }
 
 function MobileSidebar({ pathname, navigationItems }: { pathname: string; navigationItems: any[] }) {
@@ -207,7 +219,9 @@ function MobileSidebar({ pathname, navigationItems }: { pathname: string; naviga
   )
 }
 
-function UserMenu() {
+function UserMenu()
+{
+  const { profile } = useAppContext();
   const router = useRouter()
 
   return (
@@ -215,7 +229,7 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+            <AvatarImage src={profile?.avatar} alt="User" />
             <AvatarFallback>AJ</AvatarFallback>
           </Avatar>
         </Button>
@@ -223,8 +237,8 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">Alex Johnson</p>
-            <p className="text-xs text-muted-foreground">alex@example.com</p>
+            <p className="text-sm font-medium">{profile.name}</p>
+            <p className="text-xs text-muted-foreground">{profile.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
