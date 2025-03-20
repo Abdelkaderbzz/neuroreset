@@ -15,7 +15,6 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { Separator } from "@/components/ui/separator";
 import {
-  AlertCircle,
   BarChart3,
   Calendar,
   CheckCircle2,
@@ -33,16 +32,7 @@ import { CrisisSupport } from "@/components/crisis-support";
 import { ProgressVisualization } from "@/components/progress-visualization";
 import { AddTaskDialog } from "@/components/add-task-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { useToast } from "@/components/ui/use-toast";
 import {
   confirmDeletionTask,
@@ -70,18 +60,10 @@ export default function DashboardPage() {
   const [profileId, setProfileId] = useState("");
   const [editingTask, setEditingTask] = useState<any | null>(null);
   const [completedTask, setCompletedTask] = useState<any[] | null>([]);
-  const [showCrisisAlert, setShowCrisisAlert] = useState(false);
   const [tasks, setTasks] = useState<any[]>([]);
   const totalTasksToday = tasks.length;
   const completedTasksToday = completedTask?.length || 0;
-  // Simulate crisis alert after a delay
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowCrisisAlert(true);
-    }, 5000);
 
-    return () => clearTimeout(timer);
-  }, []);
   useEffect(() => {
     setProfileId(localStorage.getItem("user_id") || "");
   }, []);
@@ -180,40 +162,13 @@ export default function DashboardPage() {
   };
 
   const handleCrisisSupport = () => {
-    setShowCrisisAlert(false);
-    // Scroll to crisis support section
+
     document
       .getElementById("crisis-support")
       ?.scrollIntoView({ behavior: "smooth" });
   };
   return (
     <DashboardLayout>
-      {showCrisisAlert && (
-        <AlertDialog open={showCrisisAlert} onOpenChange={setShowCrisisAlert}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <div className="flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <AlertDialogTitle>Need immediate support?</AlertDialogTitle>
-              </div>
-              <AlertDialogDescription>
-                We've noticed you might be experiencing a difficult moment.
-                Would you like to access our crisis support resources?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>I'm okay</AlertDialogCancel>
-              <AlertDialogAction
-                className="bg-red-600 hover:bg-red-700"
-                onClick={handleCrisisSupport}
-              >
-                Get Support
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
-
       <div className="flex flex-col gap-6">
         {/* Welcome Section */}
         <section className="space-y-4">
