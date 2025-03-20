@@ -50,7 +50,7 @@ The output should be in this JSON format:
         "priority": "Low/Medium/High"
     }
 ]
-    Make sure the habits are practical, achievable, and relevant to my addiction recovery journey.
+    Make sure the habits,maximum 5 tasks, are practical, achievable, and relevant to my addiction and  recovery journey.
 `;
       const res = await fetch("/api/chat", {
         method: "POST",
@@ -59,9 +59,10 @@ The output should be in this JSON format:
       });
 
       const { data } = await res.json();
+      const profileId = localStorage.getItem('user_id')
       if (data) {
         data.map(async (task: Task) => {
-          await createTask(task, profile?.id)
+          await createTask(task,profileId || '')
             .then(() => {
               console.log(`task created successfully: ${task.title}`);
             })

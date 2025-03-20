@@ -21,6 +21,7 @@ import {
 import { Info, TrendingUp } from "lucide-react"
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { useMonthlyTaskData, useTaskCompleted, useWeeklyTaskData } from "@/hooks/tasks"
+import { useAppContext } from "@/contexts/app-context"
 
 
 
@@ -35,6 +36,8 @@ const categoryData = [
 const COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ec4899"]
 
 export function ProgressVisualization() {
+  const { profile } = useAppContext();
+  console.log("streak ",{profile})
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       if (payload[0].name === "completed") {
@@ -131,7 +134,7 @@ export function ProgressVisualization() {
               </div>
               <div className="p-3 border rounded-md">
                 <div className="text-sm text-muted-foreground">Streak</div>
-                <div className="text-2xl font-bold mt-1">7 days</div>
+                <div className="text-2xl font-bold mt-1">{profile?.streak || 0} days</div>
                 <div className="text-xs text-muted-foreground mt-1">Current best: 14 days</div>
               </div>
             </div>

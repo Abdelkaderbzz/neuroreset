@@ -83,7 +83,8 @@ export function AddTaskDialog({
   });
 
   async function onSubmit(values: TaskFormValues) {
-    const newTask = await createTask(values, profile?.id);
+    const profileId = localStorage.getItem('user_id')
+    const newTask = await createTask(values, profileId || '');
     if (newTask && newTask.length > 0) onAddTask(newTask[0]);
     form.reset({
       title: "",

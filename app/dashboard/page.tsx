@@ -67,7 +67,7 @@ export default function DashboardPage() {
     isLoading,
     profile,
   } = useAppContext();
-
+  const [profileId, setProfileId] = useState("");
   const [editingTask, setEditingTask] = useState<any | null>(null);
   const [completedTask, setCompletedTask] = useState<any[] | null>([]);
   const [showCrisisAlert, setShowCrisisAlert] = useState(false);
@@ -83,9 +83,12 @@ export default function DashboardPage() {
     return () => clearTimeout(timer);
   }, []);
   useEffect(() => {
+    setProfileId(localStorage.getItem("user_id") || "");
+  }, []);
+  useEffect(() => {
     async function fetchTasks() {
-      const t = await getAllTasks(profile.id);
-      const c = await getCompletedTasksToday();
+      const t = await getAllTasks(profileId || "");
+      const c = await getCompletedTasksToday(profileId || "");
 
       setTasks(
         t.map((task: Task) => ({
@@ -96,10 +99,10 @@ export default function DashboardPage() {
       setCompletedTask(c);
     }
     fetchTasks();
-  }, [profile.id]);
+  }, [profileId]);
   const handleTaskComplete = (id: string, completed: boolean) => {
     if (completed) {
-      markTaskAsCompleted(id);
+      markTaskAsCompleted(id, profileId || "");
       const taskToAdd = tasks.find((task) => task.id === id);
       setCompletedTask((prev) => [
         ...(prev || []),
@@ -256,7 +259,7 @@ export default function DashboardPage() {
                           Current Streak
                         </p>
                         <h3 className="text-2xl font-bold">
-                          {streakCount} days
+                          {profile?.streak || 0} days
                         </h3>
                       </div>
                       <div className="h-12 w-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">

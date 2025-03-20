@@ -80,10 +80,35 @@ export async function editTask(taskId: string, updates: Partial<Task>) {
 
   return data;
 }
-export async function markTaskAsCompleted(taskId: string) {
+// export async function markTaskAsCompleted(taskId: string, user_id: string) {
+//   const { data: completedData, error: completedError } = await supabase
+//     .from("completed_tasks")
+//     .insert([{ task_id: taskId }])
+//     .select();
+
+//   if (completedError) {
+//     console.error("Error marking task as completed:", completedError);
+//     return null;
+//   }
+
+//   // const { data: taskData, error: taskError } = await supabase
+//   //   .from('tasks')
+//   //   .update({ status: 'Completed' })
+//   //   .eq('id', taskId)
+//   //   .select();
+
+//   // if (taskError) {
+//   //   console.error('Error updating task status:', taskError);
+//   //   return null;
+//   // }
+
+//   return completedData;
+// }
+export async function markTaskAsCompleted(taskId: string, user_id: string) {
+  // Mark the task as completed
   const { data: completedData, error: completedError } = await supabase
     .from("completed_tasks")
-    .insert([{ task_id: taskId }])
+    .insert([{ task_id: taskId, user_id: user_id }])
     .select();
 
   if (completedError) {
@@ -91,20 +116,84 @@ export async function markTaskAsCompleted(taskId: string) {
     return null;
   }
 
-  // const { data: taskData, error: taskError } = await supabase
-  //   .from('tasks')
-  //   .update({ status: 'Completed' })
-  //   .eq('id', taskId)
-  //   .select();
+  // Get today's date range
+  const startOfDay = new Date();
+  startOfDay.setHours(0, 0, 0, 0); // Start of the day (00:00:00.000)
 
-  // if (taskError) {
-  //   console.error('Error updating task status:', taskError);
-  //   return null;
-  // }
+  const endOfDay = new Date();
+  endOfDay.setHours(23, 59, 59, 999); // End of the day (23:59:59.999)
+
+  // Check if this is the first task completed today
+  const { data: todayTasks, error: todayTasksError } = await supabase
+    .from("completed_tasks")
+    .select("*", { count: "exact" })
+    .eq("user_id", user_id)
+    .gte("completed_at", startOfDay.toISOString()) // Tasks completed after the start of the day
+    .lt("completed_at", endOfDay.toISOString()); // Tasks completed before the end of the day
+
+  if (todayTasksError) {
+    console.error("Error fetching today's tasks:", todayTasksError);
+    return null;
+  }
+
+  // Get yesterday's date range
+  const startOfYesterday = new Date();
+  startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+  startOfYesterday.setHours(0, 0, 0, 0); // Start of yesterday (00:00:00.000)
+
+  const endOfYesterday = new Date();
+  endOfYesterday.setDate(endOfYesterday.getDate() - 1);
+  endOfYesterday.setHours(23, 59, 59, 999); // End of yesterday (23:59:59.999)
+
+  // Check if there was a task completed yesterday
+  const { data: yesterdayTasks, error: yesterdayTasksError } = await supabase
+    .from("completed_tasks")
+    .select("*", { count: "exact" })
+    .eq("user_id", user_id)
+    .gte("completed_at", startOfYesterday.toISOString()) // Tasks completed after the start of yesterday
+    .lt("completed_at", endOfYesterday.toISOString()); // Tasks completed before the end of yesterday
+
+  if (yesterdayTasksError) {
+    console.error("Error fetching yesterday's tasks:", yesterdayTasksError);
+    return null;
+  }
+
+  // Fetch the current streak for the user
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("streak")
+    .eq("id", user_id)
+    .single();
+
+  if (userError) {
+    console.error("Error fetching user data:", userError);
+    return null;
+  }
+
+  let newStreak = 0;
+
+  // If there was a task completed yesterday, increment the streak
+  if (yesterdayTasks && yesterdayTasks.length > 0) {
+    newStreak = (userData.streak || 0) + 1;
+  } else {
+    // Otherwise, reset the streak to 0
+    newStreak = 1;
+  }
+
+  // Update the user's streak in the users table
+  const { data: updatedUser, error: updateError } = await supabase
+    .from("users")
+    .update({ streak: newStreak })
+    .eq("id", user_id)
+    .select();
+  if (updateError) {
+    console.error("Error updating user streak:", updateError);
+    return null;
+  }
 
   return completedData;
 }
-export async function getCompletedTasksToday() {
+export async function getCompletedTasksToday(user_id: string) {
   const startOfDay = new Date();
   startOfDay.setHours(0, 0, 0, 0);
 
@@ -114,9 +203,9 @@ export async function getCompletedTasksToday() {
   const { data, error } = await supabase
     .from("completed_tasks")
     .select("*", { count: "exact" })
+    .eq("user_id", user_id)
     .gte("completed_at", startOfDay.toISOString())
     .lt("completed_at", endOfDay.toISOString());
-
   if (error) {
     console.error("Error fetching completed tasks:", error);
     return null;
