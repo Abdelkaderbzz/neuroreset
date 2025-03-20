@@ -21,6 +21,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { BarChart3, Calendar, Home, LifeBuoy, Menu, MessageSquare, Search, Settings, User, Users } from "lucide-react"
+import { useAppContext } from "@/contexts/app-context"
+import { supabase } from "@/lib/supabase"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -207,9 +209,11 @@ function MobileSidebar({ pathname, navigationItems }: { pathname: string; naviga
   )
 }
 
+
+
 function UserMenu() {
   const router = useRouter()
-
+  const { profile } = useAppContext();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -223,15 +227,18 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">Alex Johnson</p>
-            <p className="text-xs text-muted-foreground">alex@example.com</p>
+            <p className="text-sm font-medium">{profile?.name}</p>
+            <p className="text-xs text-muted-foreground">{profile?.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => router.push("/profile")}>Profile</DropdownMenuItem>
         <DropdownMenuItem onClick={() => router.push("/settings")}>Settings</DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-destructive focus:text-destructive">Log out</DropdownMenuItem>
+        <DropdownMenuItem onClick={async () => {
+          await supabase.auth.signOut();
+          router.push("/login");
+        }} className="text-destructive focus:text-destructive">Log out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

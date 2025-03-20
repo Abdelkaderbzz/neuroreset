@@ -32,15 +32,17 @@ import { SuccessStoryCard } from '@/components/community/success-story-card';
 import { CreateGroupDialog } from '@/components/community/create-group-dialog';
 import { CreateStoryModal } from '@/components/community/create-story-modal';
 import { supabase } from '@/lib/supabase';
+import { useAppContext } from '@/contexts/app-context';
 
 export default function CommunityPage() {
+  const { profile } = useAppContext();
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User>({
-    id: '88888888-8888-8888-8888-888888888888',
-    name: 'Alex Johnson',
+    id:  profile?.id,
+    name: profile?.name || 'Alex Johnson',
     avatar_url: '/placeholder.svg?height=40&width=40',
     role: 'Member',
-    badge: '7 Days',
+    badge: `${profile?.streak || 0} Days`,
   });
 
   const [posts, setPosts] = useState<Post[]>([]);
