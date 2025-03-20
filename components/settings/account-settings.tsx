@@ -54,7 +54,7 @@ export function AccountSettings() {
         <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
           <div className="relative">
             <Avatar className="h-24 w-24">
-              <AvatarImage src="/placeholder.svg?height=96&width=96" alt="Profile" />
+              <AvatarImage src={profile?.avatar} alt="Profile" />
               <AvatarFallback>AJ</AvatarFallback>
             </Avatar>
             <Button size="icon" variant="secondary" className="absolute bottom-0 right-0 h-8 w-8 rounded-full">
