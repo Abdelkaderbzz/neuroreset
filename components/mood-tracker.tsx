@@ -104,7 +104,6 @@ export function MoodTracker() {
 
     // Simulate API call
     setTimeout(() => {
-      console.log("Mood submitted:", values)
       setIsSubmitting(false)
       setShowSuccess(true)
 

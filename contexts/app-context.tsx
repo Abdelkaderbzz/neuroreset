@@ -364,7 +364,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           .from("users")
           .select()
           .eq("id", profileId);
-        console.log({ profileData });
         setProfile(profileData?.[0] || defaultUserProfile);
         localStorage.setItem(
           "neuroReset_profile",
