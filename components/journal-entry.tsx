@@ -77,15 +77,6 @@ export function JournalEntry() {
 
   const handleSaveJournal = () => {
     if (journalTitle && journalContent) {
-      // In a real app, you would save this to a database
-      console.log("Journal saved:", {
-        title: journalTitle,
-        content: journalContent,
-        isPrivate,
-        tags,
-        date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
-      })
-
       setShowSuccess(true)
 
       // Reset form after a delay

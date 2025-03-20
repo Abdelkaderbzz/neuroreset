@@ -22,14 +22,15 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { BarChart3, Calendar, Home, LifeBuoy, Menu, MessageSquare, Search, Settings, User, Users } from "lucide-react"
 import Image from "next/image"
+import { useAppContext } from "@/contexts/app-context"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
+
   const pathname = usePathname()
-  const router = useRouter()
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
   const isMobile = useMediaQuery("(max-width: 768px)")
@@ -218,7 +219,9 @@ function MobileSidebar({ pathname, navigationItems }: { pathname: string; naviga
   )
 }
 
-function UserMenu() {
+function UserMenu()
+{
+  const { profile } = useAppContext();
   const router = useRouter()
 
   return (
@@ -226,7 +229,7 @@ function UserMenu() {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="User" />
+            <AvatarImage src={profile?.avatar} alt="User" />
             <AvatarFallback>AJ</AvatarFallback>
           </Avatar>
         </Button>
@@ -234,8 +237,8 @@ function UserMenu() {
       <DropdownMenuContent align="end" className="w-56">
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium">Alex Johnson</p>
-            <p className="text-xs text-muted-foreground">alex@example.com</p>
+            <p className="text-sm font-medium">{profile.name}</p>
+            <p className="text-xs text-muted-foreground">{profile.email}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
