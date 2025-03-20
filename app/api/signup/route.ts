@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     }
 
     const { data: usernameData, error: usernameError } = await supabase
-      .from("profiles") 
+      .from("profiles")
       .select("username")
       .eq("username", username)
       .single();
@@ -37,23 +37,20 @@ export async function POST(req: Request) {
       password: password.trim(),
     });
     if (authError) {
-      return NextResponse.json(
-        { error: authError.message },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: authError.message }, { status: 401 });
     }
 
     const { data: profileData, error: profileError } = await supabase
-      .from("profiles")
+      .from("users")
       .insert([
         {
           id: authData.user?.id,
+          name: username,
           username,
           email,
         },
       ])
       .single();
-
     if (profileError) {
       return NextResponse.json(
         { error: profileError.message },
@@ -67,9 +64,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("Error in API route:", error);
-    return NextResponse.json(
-      { error: "Failed to sign up." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to sign up." }, { status: 500 });
   }
 }

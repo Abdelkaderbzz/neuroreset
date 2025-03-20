@@ -15,10 +15,11 @@ export async function POST(req: Request) {
       email: email.trim(),
       password: password.trim(),
     });
+    const {data: profileData} = await supabase.from("users").select("*").eq("email", email.trim()).single();
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 401 });
     }
-    return NextResponse.json({ data });
+    return NextResponse.json({ data: { user: data.user, profile: profileData } });
   } catch (error) {
     console.error("Error in API route:", error);
     return NextResponse.json({ error: "Failed to login." }, { status: 500 });

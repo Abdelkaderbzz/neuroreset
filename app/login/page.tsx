@@ -110,8 +110,13 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (response.ok) {
-        const { user } = result.data;
-        updateProfile(user);
+        const { user, profile } = result.data;
+        updateProfile({ ...profile, session: user });
+        localStorage.setItem(
+          "neuroReset_profile",
+          JSON.stringify({ ...profile, session: user })
+        );
+        localStorage.setItem("user_id", profile.id);
         router.push("/dashboard");
       } else {
         throw new Error(result.error || "Failed to login");
