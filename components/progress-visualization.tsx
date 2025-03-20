@@ -37,7 +37,6 @@ const COLORS = ["#3b82f6", "#10b981", "#8b5cf6", "#f59e0b", "#ec4899"]
 
 export function ProgressVisualization() {
   const { profile } = useAppContext();
-  console.log("streak ",{profile})
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       if (payload[0].name === "completed") {

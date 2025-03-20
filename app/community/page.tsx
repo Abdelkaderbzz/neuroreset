@@ -32,13 +32,16 @@ import { SuccessStoryCard } from '@/components/community/success-story-card';
 import { CreateGroupDialog } from '@/components/community/create-group-dialog';
 import { CreateStoryModal } from '@/components/community/create-story-modal';
 import { supabase } from '@/lib/supabase';
+import { useAppContext } from '@/contexts/app-context';
 
 export default function CommunityPage() {
   const { toast } = useToast();
+  const { profile } = useAppContext();
+
   const [currentUser, setCurrentUser] = useState<User>({
     id: '88888888-8888-8888-8888-888888888888',
-    name: 'Alex Johnson',
-    avatar_url: '/placeholder.svg?height=40&width=40',
+    name: profile.name,
+    avatar_url: profile?.avatar,
     role: 'Member',
     badge: '7 Days',
   });
@@ -346,9 +349,7 @@ export default function CommunityPage() {
             story.title
               .toLowerCase()
               .includes(storySearchQuery.toLowerCase()) ||
-            story.content
-              .toLowerCase()
-              .includes(storySearchQuery.toLowerCase())
+            story.content.toLowerCase().includes(storySearchQuery.toLowerCase())
         )
       );
     } else {
