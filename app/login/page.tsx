@@ -126,7 +126,7 @@ export default function LoginPage() {
           "neuroReset_profile",
           JSON.stringify({ ...profile, session: user })
         );
-        localStorage.setItem("user_id", profile.id);
+        localStorage.setItem("user_id", profile?.id);
         router.push("/dashboard");
       } else {
         throw new Error(result.error || "Failed to login");

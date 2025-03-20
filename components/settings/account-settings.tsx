@@ -11,15 +11,19 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/components/ui/use-toast"
 import { Camera, Save } from "lucide-react"
+import { useAppContext } from "@/contexts/app-context"
 
 export function AccountSettings() {
+
+  const { profile } = useAppContext();
+
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
-    name: "Alex Johnson",
-    email: "alex@example.com",
-    phone: "555-123-4567",
-    username: "alexj",
+    name: profile.name,
+    email: profile.email,
+    phone: "+216 58 627 016",
+    username: profile.name,
     password: "••••••••",
   })
 
@@ -50,7 +54,7 @@ export function AccountSettings() {
         <div className="flex flex-col sm:flex-row gap-6 items-center sm:items-start">
           <div className="relative">
             <Avatar className="h-24 w-24">
-              <AvatarImage src="/placeholder.svg?height=96&width=96" alt="Profile" />
+              <AvatarImage src={profile?.avatar} alt="Profile" />
               <AvatarFallback>AJ</AvatarFallback>
             </Avatar>
             <Button size="icon" variant="secondary" className="absolute bottom-0 right-0 h-8 w-8 rounded-full">

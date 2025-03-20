@@ -37,6 +37,7 @@ import { useAppContext } from '@/contexts/app-context';
 export default function CommunityPage() {
   const { profile } = useAppContext();
   const { toast } = useToast();
+
   const [currentUser, setCurrentUser] = useState<User>({
     id:  profile?.id,
     name: profile?.name || 'Alex Johnson',
@@ -348,9 +349,7 @@ export default function CommunityPage() {
             story.title
               .toLowerCase()
               .includes(storySearchQuery.toLowerCase()) ||
-            story.content
-              .toLowerCase()
-              .includes(storySearchQuery.toLowerCase())
+            story.content.toLowerCase().includes(storySearchQuery.toLowerCase())
         )
       );
     } else {
