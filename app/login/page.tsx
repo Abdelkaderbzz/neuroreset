@@ -25,6 +25,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAppContext } from "@/contexts/app-context";
+import { useToast } from "@/hooks/use-toast";
 
 export const signupFormSchema = z
   .object({
@@ -48,6 +49,7 @@ export const loginFormSchema = z.object({
 export type LoginFormData = z.infer<typeof loginFormSchema>;
 
 export default function LoginPage() {
+  const { toast } = useToast();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { updateProfile } = useAppContext();
@@ -83,11 +85,19 @@ export default function LoginPage() {
       if (response.ok) {
         router.push("/onboarding");
       } else {
-        alert(result.error || "Failed to sign up");
+        toast({
+          title: "Error",
+          description: result?.error || "Failed to sign up",
+          variant: "destructive",
+        });
       }
-    } catch (error) {
+    } catch (error: any)  {
       console.error("Error during signup:", error);
-      alert("Failed to sign up");
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to sign up",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -123,7 +133,11 @@ export default function LoginPage() {
       }
     } catch (error: any) {
       console.error("Error during login:", error);
-      alert(error.message || "Failed to login");
+      toast({
+        title: "Error",
+        description: error.message || "Failed to login",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
