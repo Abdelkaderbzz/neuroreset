@@ -35,15 +35,15 @@ import { supabase } from '@/lib/supabase';
 import { useAppContext } from '@/contexts/app-context';
 
 export default function CommunityPage() {
-  const { toast } = useToast();
   const { profile } = useAppContext();
+  const { toast } = useToast();
 
   const [currentUser, setCurrentUser] = useState<User>({
-    id: '88888888-8888-8888-8888-888888888888',
-    name: profile.name,
-    avatar_url: profile?.avatar,
+    id:  profile?.id,
+    name: profile?.name || 'Alex Johnson',
+    avatar_url: '/placeholder.svg?height=40&width=40',
     role: 'Member',
-    badge: '7 Days',
+    badge: `${profile?.streak || 0} Days`,
   });
 
   const [posts, setPosts] = useState<Post[]>([]);

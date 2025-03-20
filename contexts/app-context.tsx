@@ -264,11 +264,16 @@ const sampleGoals: Goal[] = [
 ];
 
 const defaultUserProfile: UserProfile = {
-  name: 'Alex Johnson',
-  email: 'alex@example.com',
-  sobrietyDate: '2025-03-10T00:00:00Z',
-  recoveryType: 'Alcohol',
-  avatar:'https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=40&h=40&fit=crop',
+  id: '',
+  name: "Alex Johnson",
+  email: "alex@example.com",
+  sobrietyDate: "2025-03-10T00:00:00Z",
+  recovery_type: "Alcohol",
+  avatar: "/placeholder.svg?height=128&width=128",
+  streak: 0,
+  phone: '+216 12345678',
+  emergency_contact: '+216 12345678',
+  bio: 'I am a recovering addict and I am here to help you on your journey to sobriety.'
 };
 
 const defaultUserSettings: UserSettings = {
