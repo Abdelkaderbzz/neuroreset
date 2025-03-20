@@ -62,7 +62,7 @@ export default function Home() {
               className='flex items-center'
             >
               <Image
-                src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-03-20%20at%2016.12.39-fQkvfFNQ8nR8LVt67CpgolNhp5ptMc.png'
+                src='/images/favicon.png'
                 alt='NeuroReset Logo'
                 width={40}
                 height={40}
@@ -126,7 +126,7 @@ export default function Home() {
           >
             <div className='rounded-2xl bg-white/10 p-3 backdrop-blur-sm'>
               <Image
-                src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-03-20%20at%2016.12.39-fQkvfFNQ8nR8LVt67CpgolNhp5ptMc.png'
+                src='/images/favicon.png'
                 alt='NeuroReset Logo'
                 width={100}
                 height={100}
@@ -409,7 +409,7 @@ export default function Home() {
             <div className='mb-6 flex items-center sm:mb-0'>
               <div className='mr-3 rounded-xl bg-white/10 p-2'>
                 <Image
-                  src='https://hebbkx1anhila5yf.public.blob.vercel-storage.com/Screenshot%202025-03-20%20at%2016.12.39-fQkvfFNQ8nR8LVt67CpgolNhp5ptMc.png'
+                  src='/images/favicon.png'
                   alt='NeuroReset Logo'
                   width={40}
                   height={40}
