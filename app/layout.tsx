@@ -2,6 +2,7 @@ import type React from 'react';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import Script from 'next/script';
 import { ThemeProvider } from '@/components/theme-provider';
 import { AppProvider } from '@/contexts/app-context';
 import { Toaster } from '@/components/ui/toaster';
@@ -57,10 +58,21 @@ export default function RootLayout({
           src='https://popups-dev-integration.lissene.dev/taki-popups.umd.js'
           strategy='afterInteractive'
         />
+
+        <Script id='feeduser-script' strategy='afterInteractive'>
+          {`
+            window.Fu = window.Fu || {};
+            Fu.access_token = "c73c052759e3602ca716ff469cde44";
+            (function (d) {
+              var s = d.createElement("script");
+              s.async = true;
+              s.src = "https://widget.feeduser.me/widget/v1.js";
+              (d.head || d.body).appendChild(s);
+            })(document);
+          `}
+        </Script>
       </body>
     </html>
   );
 }
-
 import './globals.css';
-import Script from 'next/script';
