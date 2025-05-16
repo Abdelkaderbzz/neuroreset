@@ -35,9 +35,32 @@ export default function RootLayout({
             <Toaster />
           </AppProvider>
         </ThemeProvider>
+        <Script id='taki-settings' strategy='beforeInteractive'>
+          {`
+            window.TakiPopupsSettings = {
+              memberId: '817889341',
+              name: 'ahmed',
+              appId: '67ffaeade783d3021f53c288',
+              lang: 'en',
+              meta_data: {
+                age: 18,
+                state: 'Manouba',
+                phoneNumber: '5289452343',
+              }
+            };
+          `}
+        </Script>
+
+        {/* Load the Taki popups script AFTER the DOM is interactive */}
+        <Script
+          id='taki-popups'
+          src='https://popups-dev-integration.lissene.dev/taki-popups.umd.js'
+          strategy='afterInteractive'
+        />
       </body>
     </html>
   );
 }
 
 import './globals.css';
+import Script from 'next/script';

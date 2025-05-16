@@ -2,11 +2,12 @@
 
 # dependencies
 /node_modules
+pnpm-lock.yaml
 
 # next.js
 /.next/
 /out/
-
+pnpm
 # production
 /build
 
